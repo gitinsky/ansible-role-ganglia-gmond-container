@@ -1,0 +1,15 @@
+---
+- name: create ext volume
+  file: state=directory path={{ ext_ganglia_gmond_volume }}
+
+- name: put gmond.conf
+  template: src=gmond.conf dest={{ ext_ganglia_gmond_volume }}/gmond.conf
+
+- name: check if ganglia-gmond container is started
+  command: bash -c "docker ps | grep ganglia-gmond"
+  ignore_errors: True
+  register: result
+
+- name: start a ganglia-gmond container
+  command: docker run -d -h gmond-{{ ansible_hostname }} -v {{ ext_ganglia_gmond_volume }}/gmond.conf:/etc/ganglia/gmond.conf -p=8649:8649 -p=8650:8650/udp -name ganglia-gmond gitinsky/ganglia-gmond:0.1.0
+  when: result|failed
